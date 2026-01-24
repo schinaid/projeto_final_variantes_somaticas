@@ -1,280 +1,260 @@
+# Projeto Final – Classificação de Variantes Somáticas (MF)
 
-# 🧬 Genomic Risk Analysis – Myelofibrosis (Enterprise)
+Projeto de conclusão de curso – **Hospital Israelita Albert Einstein**.  
 
-Este repositório contém uma **plataforma de bioinformática** para a **classificação, filtragem e visualização de variantes somáticas de alto risco** em pacientes com **Mielofibrose**.
+Este projeto implementa um pipeline para **classificação de risco prognóstico em Mielofibrose (MF)** com base na presença de **variantes somáticas em genes de alto risco**, a partir de arquivos VCF anotados com VEP (hg38).
 
-O sistema foi desenvolvido seguindo princípios de **Engenharia de Software**, com **arquitetura modular orientada a objetos (POO)** e otimização para **processamento paralelo**.
+A implementação segue as regras propostas na atividade do curso e é baseada no artigo:
 
----
-
-## 🖥️ Interface e Visualização Geral
-
-O **dashboard principal** fornece uma visão consolidada da maturidade dos dados e da **paisagem mutacional da coorte**, permitindo uma avaliação rápida do **risco clínico**.
-
-### 🏠 Componentes da Visão Geral
-
-- **Frequência Mutacional por Gene**  
-  Identifica genes com maior incidência de variantes aprovadas pelos filtros técnicos.
-
-- **Proporção de Risco**  
-  Gráfico que discrimina amostras de:
-  - **Maior Risco (SIM)**
-  - **Risco Padrão (NÃO)**  
-  A classificação é baseada na presença de mutações de **alto impacto clínico**.
-
-- **Tabela Consolidada de Amostras**  
-  Visão agregada por paciente com os seguintes metadados:
-
-| SAMPLEID              | risco_maior | genes_encontrados              | n_variantes |
-|-----------------------|-------------|--------------------------------|-------------|
-| liftOver_WP216_hg38   | SIM         | U2AF1, TP53                   | 2           |
-| liftOver_WP280_hg38   | NÃO         | —                              | 0           |
-| liftOver_WP306_hg38   | SIM         | CBL, EZH2, IDH1, U2AF1         | 6           |
+> *Genomic analysis of primary and secondary myelofibrosis*  
+> Blood Advances, 2021  
+> https://ashpublications.org/bloodadvances/article/5/5/1442/475395/Genomic-analysis-of-primary-and-secondary
 
 ---
 
-## 🏗️ Arquitetura Modular
+## Objetivo
 
-O software segue padrões rigorosos de **Engenharia de Software**, garantindo:
+Classificar cada amostra como:
 
-- Separação clara entre **lógica de negócio** e **camada de visualização**
-- Alta **manutenibilidade**
-- Código testável e escalável
+- **MAIOR_RISCO = SIM / NÃO**
 
-> 🔒 Cada função respeita o limite máximo de **7 linhas de lógica funcional**, reduzindo complexidade cognitiva.
+com base na presença de variantes somáticas patogênicas em genes de alto risco associados a pior prognóstico em MF.
 
-### 🔧 Componentes do Sistema
+Além disso, gerar uma flag independente:
 
-- **VCFProcessor**  
-  Motor de processamento paralelo responsável por:
-  - Parsing de arquivos VCF
-  - Filtragem
-  - Execução em cluster HPC
+- **TP53_PRESENTE = SIM / NÃO**
 
-- **BioVisualizer**  
-  Encapsula a geração de visualizações científicas:
+---
+
+## Entrada de Dados
+
+- **30 arquivos VCF**
+- Genoma de referência: **hg38**
+- Um VCF por amostra
+- Arquivos já:
+  - liftOver (hg19 → hg38)
+  - anotados com **VEP**
+- Diretório de entrada: `inputs/`
+
+### Genes avaliados (painel fixo)
+
+- **TP53**
+- **EZH2**
+- **CBL**
+- **U2AF1**
+- **SRSF2**
+- **IDH1**
+- **IDH2**
+- **NRAS**
+- **KRAS**
+
+---
+
+## Regra de Classificação
+
+Uma amostra é considerada **MAIOR_RISCO = SIM** se existir **≥ 1 variante** que cumpra **todas** as condições abaixo:
+
+### Critérios da variante
+
+- `GENE` (ou `SYMBOL`) pertence ao painel definido
+- `FILTER = PASS`
+- Variante com **efeito funcional**, atendendo a pelo menos um critério:
+  - `IMPACT ∈ {MODERATE, HIGH}` **ou**
+  - `Consequence` contém:
+    - `missense_variant`
+    - `stop_gained`
+    - `frameshift_variant`
+    - `splice_`
+    - `start_lost`
+- Critério técnico:
+  - `DP ≥ 20` **ou**
+  - `VAF ≥ 0.05` (5%)
+
+### Flag adicional
+
+- **TP53_PRESENTE = SIM / NÃO**
+  - Mesma regra acima, porém filtrando exclusivamente variantes no gene **TP53**
+
+---
+
+## Fluxo do Pipeline
+
+1. Leitura dos 30 arquivos VCF
+2. Extração do cabeçalho VEP (campo `CSQ`)
+3. Parsing das variantes aprovadas (`FILTER = PASS`)
+4. Cálculo de métricas:
+   - DP
+   - VAF
+   - Tipo de substituição
+5. Aplicação das regras biológicas e técnicas
+6. Consolidação dos resultados por variante e por amostra
+7. Geração de tabelas finais e visualizações
+8. Exportação de gráficos e PDFs técnicos
+
+---
+
+## Estrutura do Projeto
+
+.
+├── app.py
+├── Dockerfile
+├── docker-compose.yml
+├── requirements.txt
+├── .env
+├── spawn.sh
+├── spawn.bat
+├── inputs/
+│ ├── *.vcf
+│ └── leiam-me.docx
+├── modules/
+│ ├── processor.py
+│ ├── visualizer.py
+│ └── reporter.py
+└── outputs/
+├── variants_high_risk.tsv
+├── sample_risk.tsv
+└── plots/
+└── dashboard_resultados.png
+
+
+---
+
+## Descrição dos Diretórios
+
+### `inputs/`
+
+Contém os **VCFs de entrada**, um por amostra, já anotados com VEP e prontos para processamento.
+
+---
+
+### `modules/`
+
+Código modularizado do pipeline.
+
+#### `processor.py`
+Responsável pelo **processamento genômico**:
+
+- Leitura paralela dos VCFs
+- Parsing do campo `CSQ`
+- Cálculo de VAF
+- Classificação de substituições
+- Aplicação das regras de filtragem biológica
+- Geração da lista de variantes de alto risco
+
+#### `visualizer.py`
+Responsável pelas **visualizações**:
+
+- Frequência de mutações por gene
+- Status de risco da coorte
+- OncoPrint (matriz mutacional)
+- Lollipop plots (hotspots proteicos)
+- Assinaturas mutacionais
+
+#### `reporter.py`
+Responsável pela **geração de relatórios PDF**:
+
+- Inserção de parâmetros de filtragem
+- Inclusão de gráficos
+- Listagem detalhada das variantes por amostra
+
+---
+
+### `outputs/`
+
+Resultados finais do pipeline.
+
+#### `variants_high_risk.tsv`
+Uma linha por variante filtrada, contendo no mínimo:
+
+- `SAMPLEID`
+- `CHROM`
+- `POS`
+- `REF`
+- `ALT`
+- `GENE`
+- `Consequence`
+- `IMPACT`
+- `FILTER`
+- `DP`
+- `VAF`
+
+#### `sample_risk.tsv`
+Uma linha por amostra, contendo:
+
+- `SAMPLEID`
+- `MAIOR_RISCO` (SIM/NÃO)
+- `TP53_PRESENTE` (SIM/NÃO)
+- `GENES_ALTO_RISCO_ENCONTRADOS`
+- `N_VARIANTES_ALTO_RISCO`
+
+#### `plots/`
+Gráficos gerados automaticamente pelo dashboard.
+
+---
+
+## Aplicação (`app.py`)
+
+Interface interativa construída com **Streamlit**, permitindo:
+
+- Definição dinâmica de thresholds (DP, VAF, gnomAD)
+- Execução do pipeline
+- Visualização dos resultados por abas:
+  - Visão geral da coorte
   - OncoPrint
-  - Lollipop Plot
-  - Assinaturas Mutacionais  
-  *(Matplotlib + Seaborn)*
-
-- **ReportManager**  
-  Consolida dados e evidências gráficas em **PDF**, com foco em legibilidade clínica.
-
-- **Streamlit App**  
-  Orquestra a interface do usuário e utiliza `st.session_state` para persistência de dados entre interações.
+  - Lollipop
+  - Assinaturas mutacionais
+  - Exportação de PDF por amostra
 
 ---
 
-## 🔍 Definição de Filtros e Parâmetros Técnicos
+## Docker e Execução
 
-O rigor científico do pipeline é garantido por **múltiplas camadas de filtragem configuráveis**.
+### Dockerfile
 
-### ⚙️ Métricas de Qualidade (QC)
+- Base: `python:3.9-slim`
+- Instala dependências do sistema
+- Instala bibliotecas Python
+- Executa o Streamlit na porta `8501`
 
-- **DP (Depth)**  
-  Profundidade mínima de leitura para garantir confiança estatística.
+### docker-compose.yml
 
-- **VAF (Variant Allele Frequency)**  
-  Proporção de alelos mutados, essencial para inferir clonalidade:
+- Cria o serviço `vcf-analyzer`
+- Mapeia volumes:
+  - `inputs/` → `/app/inputs`
+  - `outputs/` → `/app/outputs`
+- Usa variáveis definidas no `.env`
 
-\[
-VAF = \frac{\text{Leituras Alternativas}}{\text{Total de Leituras}}
-\]
+### `.env`
 
----
+Define parâmetros do ambiente, incluindo:
 
-### 🔬 Filtros Populacionais e Clínicos
-
-- **gnomAD Max AF**  
-  Remove variantes com frequência populacional acima do limiar definido (ex: > 1%), caracterizando polimorfismos germinativos comuns.
-
-- **ClinVar – Pathogenic Only**  
-  Quando ativado, exibe apenas variantes classificadas como:
-  - *Patogênicas*
-  - *Provavelmente Patogênicas*
+- Diretório de entrada
+- Diretório de saída
+- Lista de genes de alto risco
 
 ---
 
-## 📄 Relatórios Técnicos (PDF)
+### Execução
 
-O sistema gera **laudos automatizados** contendo:
+Linux / macOS:
+```bash
+./spawn.sh
+```
 
-- **Metadados de Filtragem**  
-  Tabela de referência com parâmetros de DP, VAF e gnomAD aplicados.
+Windows:
+```
+spawn.bat
+```
 
-- **Evidências Gráficas**  
-  Inclusão de **Lollipop Plot** para validação de hotspots proteicos.
+Ou diretamente:
+```
+docker compose up --build
+```
 
-- **Detalhamento Técnico**  
-  Lista completa de variantes com:
-  - HGVSp
-  - Classificação ClinVar
-  - Profundidade de leitura
+Resumo
 
----
+Este projeto implementa um pipeline reprodutível, modular e containerizado para análise de variantes somáticas em MF, atendendo integralmente aos critérios técnicos e científicos exigidos na atividade final do curso do Einstein.
 
-## 🚀 Considerações Finais
 
-Este projeto foi concebido para **ambientes clínicos e de pesquisa**, oferecendo:
-- Robustez científica
-- Escalabilidade computacional
-- Clareza na comunicação de risco genômico
 
-> Ideal para pipelines de **medicina de precisão**, **oncogenômica** e **pesquisa translacional**.
-
----
-
-
-
-
-# 🧬 Genomic Risk Analysis – Myelofibrosis (Enterprise)
-
-Plataforma de **bioinformática clínica** para **classificação, filtragem e visualização de variantes somáticas de alto risco** em pacientes com **Mielofibrose**.
-
-O sistema foi desenvolvido seguindo princípios rigorosos de **Engenharia de Software**, com **arquitetura modular orientada a objetos (POO)** e processamento paralelo.
-
----
-
-## Como Executar e Acessar o Sistema
-
-Após iniciar a aplicação Streamlit, acesse no navegador:
-
-http://127.0.0.1:8501
-
-
-
-A partir dessa interface, o usuário pode **controlar dinamicamente os filtros genômicos** e explorar diferentes visões analíticas da coorte.
-
----
-
-## 🖥️ Interface Geral do Sistema
-
-### 🔧 Painel de Controle (Sidebar)
-
-A barra lateral funciona como o **centro de governança da análise**, permitindo ajustes em tempo real:
-
-- **DP Min (Depth)**  
-  Define a profundidade mínima de leitura para garantir confiabilidade estatística.
-
-- **VAF Min (Variant Allele Frequency)**  
-  Define a fração mínima de alelos mutados:
-  
-  \[
-  VAF = \frac{\text{Leituras Alternativas}}{\text{Total de Leituras}}
-  \]
-
-- **gnomAD Max AF**  
-  Remove variantes comuns da população saudável.  
-  Valores > 0.01 (1%) indicam forte evidência de variante germinativa.
-
-- **Apenas ClinVar Pathogenic**  
-  Quando ativado, mantém apenas variantes classificadas como:
-  - Patogênicas
-  - Provavelmente Patogênicas
-
-- **Iniciar Análise de VCFs**  
-  Executa o pipeline completo de filtragem, agregação e visualização.
-
----
-
-## 🏠 Aba 1: Visão Geral (Overview)
-
-Esta aba funciona como o **Executive Summary da coorte**.
-
-### O que o sistema está fazendo
-Filtra variantes somáticas **em tempo real**, aplicando os thresholds de DP, VAF e gnomAD definidos na sidebar.
-
-### O que você está visualizando
-
-- **Gráfico de Barras – Frequência Mutacional por Gene**  
-  Identifica quais genes do painel de Mielofibrose (ex: *JAK2, CALR, MPL, ASXL1*) concentram mais mutações aprovadas.
-
-- **Gráfico de Pizza – Proporção de Risco**  
-  Compara amostras classificadas como:
-  - **SIM** → Presença de mutações de alto impacto
-  - **NÃO** → Nenhuma variante relevante após filtragem
-
-- **Tabela Consolidada de Amostras**  
-  Lista cada `SAMPLEID`, o status de risco e os genes encontrados, facilitando auditoria e governança.
-
-![Visão Geral](./b39298d7-01c7-4739-ad8f-3f9530a83e4b.png)
-
----
-
-## 🧩 Aba 2: OncoPrint – Paisagem Mutacional
-
-O **OncoPrint** permite visualizar a paisagem mutacional completa da coorte em uma única matriz.
-
-### O que está fazendo
-O módulo `BioVisualizer` transforma a lista de variantes em uma **matriz binária**:
-- Linhas → Genes
-- Colunas → Pacientes (Amostras)
-
-### O que o gráfico explica
-- Co-ocorrência de mutações
-- Exclusividade mútua entre genes
-
-### Significado
-Blocos coloridos indicam presença de mutação, facilitando a identificação de **drivers genômicos centrais**.
-
-![OncoPrint](./2b171e59-328f-4af5-bf6c-811d4061a176.png)
-
----
-
-## 🍭 Aba 3: Lollipop Plot – Distribuição Proteica
-
-Enquanto o OncoPrint analisa a coorte, o **Lollipop Plot** foca na **proteína individual**.
-
-### O que está fazendo
-Mapeia a posição genômica da variante para a coordenada proteica (`Protein_position` – VEP).
-
-### O que você está visualizando
-- **Eixo X** → Extensão da proteína
-- **Eixo Y** → VAF (carga mutacional)
-
-### Significado
-Permite identificar **hotspots funcionais**, essenciais em Mielofibrose (ex: domínios quinase).
-
-![Lollipop](./ab7032dd-0636-4de8-ad02-7218462f8da3.png)
-
----
-
-## 📊 Aba 4: Assinaturas Mutacionais
-
-Esta aba investiga **os processos biológicos subjacentes às mutações**.
-
-### O que está fazendo
-Agrupa SNVs em seis classes:
-- C>A, C>G, C>T
-- T>A, T>C, T>G
-
-### O que você visualiza
-Gráfico de barras com a distribuição percentual de cada substituição.
-
-### Significado
-Cada padrão reflete um processo biológico distinto.  
-Por exemplo, **C>T** é fortemente associado ao envelhecimento celular.
-
-![Assinaturas](./8d686f85-db6a-403c-b1dc-8ca7fbfe5bb8.png)
-
----
-
-## 📄 Aba 5: Laudo Técnico (PDF)
-
-Etapa final da pipeline, onde o dado vira **documento clínico ou científico oficial**.
-
-### O que está fazendo
-Integra:
-- Metadados dos filtros
-- Evidências gráficas (Lollipop)
-- Lista detalhada de variantes
-
-### Conteúdo do Relatório
-- **Contexto de Filtro** (DP, VAF, gnomAD)
-- **Interpretação Clínica (ClinVar)**
-- **Detalhamento técnico (HGVSp, profundidade, impacto)**
-
-![PDF](./1f81d343-91b0-4399-b1b5-ae8b41cdef76.png)
----
 
