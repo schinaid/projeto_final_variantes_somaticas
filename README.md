@@ -94,31 +94,31 @@ Uma amostra é considerada **MAIOR_RISCO = SIM** se existir **≥ 1 variante** q
 ---
 
 ## Estrutura do Projeto
-\br
-projeto_final_variantes_somaticas/\br
-├── app.py \br
-├── Dockerfile \br
-├── docker-compose.yml \br
-├── requirements.txt \br
-├── .env \br
-├── spawn.sh \br
-├── spawn.bat \br
-│ \br
-├── inputs/ \br
-│ ├── *.vcf \br
-│ └── leiam-me.docx \br
-│ \br
-├── modules/ \br
-│ ├── processor.py \br
-│ ├── visualizer.py \br
-│ └── reporter.py \br
-│ \br
-└── outputs/ \br
-├── variants_high_risk.tsv \br
-├── sample_risk.tsv \br
-└── plots/ \br
-└── dashboard_resultados.png \br
-
+```
+projeto_final_variantes_somaticas/
+├── app.py 
+├── Dockerfile 
+├── docker-compose.yml 
+├── requirements.txt 
+├── .env 
+├── spawn.sh 
+├── spawn.bat 
+│ 
+├── inputs/ 
+│ ├── *.vcf 
+│ └── leiam-me.docx 
+│ 
+├── modules/ 
+│ ├── processor.py 
+│ ├── visualizer.py 
+│ └── reporter.py 
+│ 
+└── outputs/ 
+├── variants_high_risk.tsv 
+├── sample_risk.tsv 
+└── plots/ 
+└── dashboard_resultados.png 
+```
 ---
 
 ## Descrição dos Diretórios
