@@ -95,7 +95,7 @@ Uma amostra é considerada **MAIOR_RISCO = SIM** se existir **≥ 1 variante** q
 
 ## Estrutura do Projeto
 
-.
+projeto_final_variantes_somaticas/
 ├── app.py
 ├── Dockerfile
 ├── docker-compose.yml
@@ -103,19 +103,21 @@ Uma amostra é considerada **MAIOR_RISCO = SIM** se existir **≥ 1 variante** q
 ├── .env
 ├── spawn.sh
 ├── spawn.bat
+│
 ├── inputs/
 │ ├── *.vcf
 │ └── leiam-me.docx
+│
 ├── modules/
 │ ├── processor.py
 │ ├── visualizer.py
 │ └── reporter.py
+│
 └── outputs/
 ├── variants_high_risk.tsv
 ├── sample_risk.tsv
 └── plots/
 └── dashboard_resultados.png
-
 
 ---
 
