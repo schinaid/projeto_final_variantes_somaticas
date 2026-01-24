@@ -211,6 +211,8 @@ Interface interativa construída com **Streamlit**, permitindo:
 
 ## Docker e Execução
 
+Para aqueles que não tem docker instalado em sua maquina faça o seguinte tutorial <a hreaf='https://docs.docker.com/desktop/setup/install/windows-install/'> Para Windows </a><a href='https://docs.docker.com/engine/install/'> Para Linux </a>
+
 ### Dockerfile
 
 - Base: `python:3.9-slim`
