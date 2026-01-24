@@ -1,0 +1,12 @@
+# Manipulação e análise de dados tabulares
+pandas
+
+# Geração de gráficos e visualizações
+matplotlib
+seaborn
+
+#Geração de dashboard com streamlit
+streamlit
+
+#Geração de pdf para relatório
+fpdf2

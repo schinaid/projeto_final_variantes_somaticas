@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  vcf-analyzer:
+    build: .
+    container_name: vcf_genomic_analysis
+    env_file:
+      - .env
+    # Mapeia a porta do Streamlit (8501) para o seu navegador
+    ports:
+      - "8501:8501"
+    volumes:
+      # Mapeia as pastas locais para dentro do container
+      - ${INPUT_DIR}:/app/inputs
+      - ${OUTPUT_DIR}:/app/outputs
+    environment:
+      - INPUT_DIR=/app/inputs
+      - OUTPUT_DIR=/app/outputs
