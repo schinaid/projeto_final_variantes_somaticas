@@ -211,7 +211,7 @@ Interface interativa construída com **Streamlit**, permitindo:
 
 ## Docker e Execução
 
-Para aqueles que não tem docker instalado em sua maquina faça o seguinte tutorial <a href='https://docs.docker.com/desktop/setup/install/windows-install/'> Para Windows </a>  <a href='https://docs.docker.com/engine/install/'> Para Linux </a>
+Para aqueles que não tem docker instalado em sua maquina faça o seguinte tutorial <a href='https://docs.docker.com/desktop/setup/install/windows-install/'> Para Windows </a> ou <a href='https://docs.docker.com/engine/install/'> Para Linux </a>
 
 ### Dockerfile
 
