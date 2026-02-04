@@ -28,7 +28,7 @@ def main():
           'vaf_min': st.sidebar.slider("VAF Mínimo", 0.0, 1.0, 0.05),
           'max_pop_af': st.sidebar.slider("gnomAD Max AF", 0.0, 0.05, 0.01, format="%.3f"),
           'genes': [i.strip() for i in os.getenv('GENES_ALTO_RISCO', '').split(',')],
-          'only_p': st.sidebar.checkbox("Apenas ClinVar Pathogenic") }
+          'only_p': st.sidebar.checkbox("Apenas Pathogenic funcionalidade em teste") }
 
     if st.sidebar.button("🚀 Iniciar Análise"):
         paths = glob.glob(os.path.join(os.getenv('INPUT_DIR'), "**/*.vcf*"), recursive=True)
@@ -47,7 +47,7 @@ def main():
         
         with t2:
             st.markdown("### OncoPrint: Paisagem Mutacional")
-            st.write("Esta visualização identifica padrões de **co-ocorrência** ou **exclusividade mútua** entre genes em diferentes pacientes.")
+            st.write("Esta visualização identifica padrões de **co-ocorrência** ou **exclusividade mútua** entre genes em diferentes amostras.")
             st.pyplot(viz.plot_oncoprint(df))
         
         with t3:
