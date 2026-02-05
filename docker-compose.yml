@@ -4,15 +4,23 @@ services:
   vcf-analyzer:
     build: .
     container_name: vcf_genomic_analysis
+    # Reinicia automaticamente exceto se você parar manualmente (ideal para VPN/EKS)
+    restart: unless-stopped
     env_file:
       - .env
-    # Mapeia a porta do Streamlit (8501) para o seu navegador
     ports:
       - "8501:8501"
     volumes:
-      # Mapeia as pastas locais para dentro do container
-      - ${INPUT_DIR}:/app/inputs
-      - ${OUTPUT_DIR}:/app/outputs
+      # Mapeamento dinâmico baseado no seu .env
+      - ${INPUT_DIR}:/app/inputs:ro  # Read-only para segurança dos VCFs brutos
+      - ${OUTPUT_DIR}:/app/outputs    # Escrita para TSVs e Relatórios
     environment:
+      # Sobrescreve caminhos para o padrão interno do container definido no Dockerfile
       - INPUT_DIR=/app/inputs
       - OUTPUT_DIR=/app/outputs
+    # Configuração de limites de recurso (Opcional, mas recomendado para EKS)
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
